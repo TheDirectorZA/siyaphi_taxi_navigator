@@ -1,0 +1,19 @@
+{
+  "app_name": "Siyaphi",
+  "tagline": "Waarheen gaan jy?",
+  "search": {
+    "title": "Vind jou taxi",
+    "origin_placeholder": "Waar is jy? (bv. Noord Rank)",
+    "destination_placeholder": "Waarheen? (bv. Soweto)",
+    "search_button": "Soek roetes",
+    "no_results": "Geen roetes gevind nie."
+  },
+  "fare": {
+    "title": "Geskatte tarief",
+    "range": "R{{min}} – R{{max}}",
+    "disclaimer": "Tariewe wissel. Bevestig met bestuurder."
+  },
+  "offline": {
+    "banner": "Jy is vanlyn — wys gestoorde data"
+  }
+}

@@ -1,0 +1,148 @@
+{
+  "app_name": "Siyaphi",
+  "tagline": "Where are you going?",
+
+  "search": {
+    "title": "Find your taxi",
+    "origin_placeholder": "Where are you? (e.g. Noord Rank)",
+    "destination_placeholder": "Where to? (e.g. Soweto)",
+    "search_button": "Search routes",
+    "no_results": "No routes found. Try different keywords.",
+    "no_results_hint": "Taxi routes are informal — not all routes are listed yet.",
+    "loading": "Searching routes...",
+    "offline_notice": "Showing cached results. Some routes may be outdated.",
+    "results_count": "{{count}} route found",
+    "results_count_plural": "{{count}} routes found"
+  },
+
+  "route": {
+    "details": "Route details",
+    "from": "From",
+    "to": "To",
+    "via": "Via",
+    "distance": "{{km}} km",
+    "frequency": "Every ~{{min}} minutes",
+    "operating_hours": "Operating hours",
+    "stops": "Stops",
+    "confidence_low": "⚠️ Unverified data — confirm locally",
+    "confidence_medium": "Partially verified",
+    "confidence_high": "Verified",
+    "data_stale": "Data may be outdated ({{days}} days old)",
+    "data_fresh": "Updated recently"
+  },
+
+  "fare": {
+    "title": "Estimated fare",
+    "range": "R{{min}} – R{{max}}",
+    "typical": "Typically R{{amount}}",
+    "disclaimer": "Fares vary. Always confirm with driver.",
+    "not_available": "Fare not available",
+    "not_available_hint": "Carry R10–R30 for most short city routes.",
+    "source_community": "Community estimate",
+    "source_admin": "Verified estimate",
+    "stale_warning": "Fare data may be outdated"
+  },
+
+  "eta": {
+    "title": "Estimated travel time",
+    "range": "{{min}}–{{max}} min",
+    "base": "~{{min}} min",
+    "peak": "Peak hour — expect delays",
+    "weekend": "Weekend schedule",
+    "disclaimer": "Estimates only. Traffic conditions vary.",
+    "not_available": "Travel time not available",
+    "delays_reported": "{{count}} delay reported on this route",
+    "delays_reported_plural": "{{count}} delays reported on this route"
+  },
+
+  "stops": {
+    "nearby": "Nearby stops",
+    "no_nearby": "No stops found nearby",
+    "no_nearby_hint": "Try enabling location or searching manually",
+    "rank": "Taxi rank",
+    "stop": "Stop",
+    "terminus": "Terminal",
+    "informal": "Informal stop",
+    "distance": "{{km}} km away",
+    "routes_here": "{{count}} route from here",
+    "routes_here_plural": "{{count}} routes from here"
+  },
+
+  "reports": {
+    "title": "Live updates",
+    "submit": "Report an issue",
+    "submit_success": "Report submitted. Thank you!",
+    "submit_offline": "Report saved. Will upload when online.",
+    "submit_error": "Could not submit report. Try again.",
+    "no_reports": "No issues reported right now",
+    "type_delay": "Delay",
+    "type_taxi_full": "Taxi full",
+    "type_taxi_unavailable": "No taxis available",
+    "type_disruption": "Disruption",
+    "type_safety": "Safety incident",
+    "type_congestion": "Rank congestion",
+    "type_route_change": "Route change",
+    "type_fare_change": "Fare change",
+    "type_other": "Other",
+    "severity_low": "Minor",
+    "severity_medium": "Moderate",
+    "severity_high": "Serious",
+    "severity_critical": "Critical",
+    "trust_score": "{{score}}% accuracy",
+    "expires_in": "Expires in {{min}} min",
+    "upvote": "Accurate",
+    "downvote": "Inaccurate",
+    "pending_queue": "{{count}} report waiting to upload"
+  },
+
+  "map": {
+    "locate_me": "Find my location",
+    "location_denied": "Location access denied",
+    "location_denied_hint": "Enable location in Settings to see nearby stops",
+    "offline_map": "Offline map (limited detail)",
+    "map_unavailable": "Map unavailable"
+  },
+
+  "offline": {
+    "banner": "You're offline — showing cached data",
+    "last_synced": "Last updated: {{time}}",
+    "never_synced": "Not yet synced",
+    "sync_now": "Sync now",
+    "syncing": "Syncing...",
+    "sync_done": "Synced",
+    "sync_failed": "Sync failed",
+    "stale_data_warning": "This data may be outdated"
+  },
+
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "no_internet": "No internet connection",
+    "server_unavailable": "Service temporarily unavailable",
+    "location_unavailable": "Could not get your location",
+    "cache_corrupted": "Cached data was corrupted and has been cleared.",
+    "try_again": "Try again"
+  },
+
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "city": "City",
+    "download_offline": "Download for offline use",
+    "clear_cache": "Clear offline data",
+    "about": "About Siyaphi",
+    "privacy": "Privacy policy",
+    "version": "Version {{version}}"
+  },
+
+  "privacy": {
+    "location_consent": "Siyaphi uses your location only to find nearby stops. Your location is not stored or shared.",
+    "anonymous_use": "You can use Siyaphi without creating an account.",
+    "report_privacy": "Reports are anonymous by default."
+  },
+
+  "accessibility": {
+    "search_button_label": "Search for taxi routes",
+    "report_button_label": "Submit a live update",
+    "route_card_label": "Route: {{name}}, fare R{{min}} to R{{max}}"
+  }
+}

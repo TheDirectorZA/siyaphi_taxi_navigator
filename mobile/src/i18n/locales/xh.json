@@ -1,0 +1,19 @@
+{
+  "app_name": "Siyaphi",
+  "tagline": "Uya phi?",
+  "search": {
+    "title": "Fumana iiteksi yakho",
+    "origin_placeholder": "Uphi? (umz. Noord Rank)",
+    "destination_placeholder": "Uya phi? (umz. Soweto)",
+    "search_button": "Khangela iindlela",
+    "no_results": "Azifumanekanga iindlela."
+  },
+  "fare": {
+    "title": "Inani elinganyelweyo",
+    "range": "R{{min}} – R{{max}}",
+    "disclaimer": "Amanani ahluka. Qinisekisa nomqhubi."
+  },
+  "offline": {
+    "banner": "Awuqhagamshelwanga — ibonisa idatha egciniwayo"
+  }
+}

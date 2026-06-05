@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgis/postgis:15-3.3
+    restart: always
+    environment:
+      POSTGRES_DB: taxi_navigator
+      POSTGRES_USER: taxi
+      POSTGRES_PASSWORD: taxi_pass
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./sql/seed_routes.sql:/docker-entrypoint-initdb.d/seed_routes.sql:ro
+    ports:
+      - '5432:5432'
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+
+  backend:
+    build:
+      context: ./backend
+    working_dir: /app
+    environment:
+      - DATABASE_URL=postgresql://taxi:taxi_pass@postgres:5432/taxi_navigator
+      - REDIS_URL=redis://redis:6379
+      - NODE_ENV=development
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    ports:
+      - '3000:3000'
+    depends_on:
+      - postgres
+      - redis
+    command: sh -c "npm ci --silent && npm run start:dev"
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@local
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - '8081:80'
+    depends_on:
+      - postgres
+
+volumes:
+  pgdata:

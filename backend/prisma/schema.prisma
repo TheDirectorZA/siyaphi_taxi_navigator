@@ -1,0 +1,441 @@
+// Siyaphi Taxi Navigator - Prisma Schema
+// Database: PostgreSQL + PostGIS
+// All geospatial columns use raw SQL via PostGIS extensions
+// Geometry columns managed via migrations, not Prisma native types
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis]
+}
+
+// ─────────────────────────────────────────────
+// CITY
+// Route data is segmented per city for rollout
+// ─────────────────────────────────────────────
+model City {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique              // e.g. "johannesburg"
+  countryCode String   @default("ZA")
+  boundingBox Json                          // { minLat, minLng, maxLat, maxLng }
+  isActive    Boolean  @default(false)      // only active cities served
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  routes  Route[]
+  stops   Stop[]
+  reports CrowdReport[]
+
+  @@map("cities")
+}
+
+// ─────────────────────────────────────────────
+// ROUTE
+// A named taxi route between two terminal points
+// Routes are informal — data may be incomplete
+// ─────────────────────────────────────────────
+model Route {
+  id              String      @id @default(uuid())
+  cityId          String
+  name            String                           // e.g. "Noord → Soweto"
+  shortCode       String?                          // e.g. "N-SOW"
+  originName      String
+  destinationName String
+  distanceKm      Float?
+  // geometry stored as PostGIS LineString via raw SQL, referenced by ID
+  geometryWkt     String?                          // WKT fallback for non-PostGIS use
+  operatingHours  Json?                            // { weekday: "05:00-22:00", weekend: "06:00-20:00" }
+  frequencyMinutes Int?                            // avg headway in minutes
+  isActive        Boolean     @default(true)
+  dataConfidence  DataConfidence @default(LOW)
+  version         Int         @default(1)
+  publishedAt     DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  createdBy       String?                          // admin user ID
+
+  city            City        @relation(fields: [cityId], references: [id])
+  segments        RouteSegment[]
+  stops           RouteStop[]
+  fares           FareRange[]
+  etaConfigs      EtaConfig[]
+  reports         CrowdReport[]
+  versions        RouteVersion[]
+
+  @@index([cityId, isActive])
+  @@map("routes")
+}
+
+// ─────────────────────────────────────────────
+// ROUTE VERSION
+// Full snapshot of route at a point in time
+// Supports rollback and change auditing
+// ─────────────────────────────────────────────
+model RouteVersion {
+  id          String   @id @default(uuid())
+  routeId     String
+  version     Int
+  snapshot    Json                  // full route data at this version
+  changedBy   String?
+  changeNote  String?
+  createdAt   DateTime @default(now())
+
+  route       Route    @relation(fields: [routeId], references: [id])
+
+  @@unique([routeId, version])
+  @@map("route_versions")
+}
+
+// ─────────────────────────────────────────────
+// ROUTE SEGMENT
+// Ordered stops that make up a route
+// ─────────────────────────────────────────────
+model RouteSegment {
+  id              String   @id @default(uuid())
+  routeId         String
+  fromStopId      String
+  toStopId        String
+  sequence        Int
+  distanceKm      Float?
+  typicalMinutes  Int?     // typical travel time for this leg
+  createdAt       DateTime @default(now())
+
+  route           Route    @relation(fields: [routeId], references: [id])
+  fromStop        Stop     @relation("SegmentFrom", fields: [fromStopId], references: [id])
+  toStop          Stop     @relation("SegmentTo", fields: [toStopId], references: [id])
+
+  @@unique([routeId, sequence])
+  @@index([routeId])
+  @@map("route_segments")
+}
+
+// ─────────────────────────────────────────────
+// STOP / RANK
+// A physical location where taxis stop or rank
+// Type distinguishes ranks from informal stops
+// ─────────────────────────────────────────────
+model Stop {
+  id           String    @id @default(uuid())
+  cityId       String
+  name         String
+  aliases      String[]                      // local names and landmarks
+  type         StopType  @default(STOP)
+  address      String?
+  landmark     String?                       // nearby landmark for wayfinding
+  // lat/lng stored for app-level distance calc; PostGIS geom via raw SQL
+  latitude     Float
+  longitude    Float
+  isActive     Boolean   @default(true)
+  dataConfidence DataConfidence @default(LOW)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  city         City      @relation(fields: [cityId], references: [id])
+  routeStops   RouteStop[]
+  segmentsFrom RouteSegment[] @relation("SegmentFrom")
+  segmentsTo   RouteSegment[] @relation("SegmentTo")
+  reports      CrowdReport[]
+
+  @@index([cityId])
+  @@map("stops")
+}
+
+// ─────────────────────────────────────────────
+// ROUTE-STOP JUNCTION
+// Ordered stops on a route with metadata
+// ─────────────────────────────────────────────
+model RouteStop {
+  id              String   @id @default(uuid())
+  routeId         String
+  stopId          String
+  sequence        Int
+  isTerminal      Boolean  @default(false)   // origin or destination
+  isRequest       Boolean  @default(false)   // flag-down only stop
+  minutesFromOrigin Int?
+
+  route           Route    @relation(fields: [routeId], references: [id])
+  stop            Stop     @relation(fields: [stopId], references: [id])
+
+  @@unique([routeId, sequence])
+  @@index([routeId])
+  @@index([stopId])
+  @@map("route_stops")
+}
+
+// ─────────────────────────────────────────────
+// FARE RANGE
+// Fares are ranges, never exact prices
+// May vary by time, day, and conditions
+// ─────────────────────────────────────────────
+model FareRange {
+  id             String    @id @default(uuid())
+  routeId        String
+  fromStopId     String?
+  toStopId       String?
+  minFareZAR     Float
+  maxFareZAR     Float
+  typicalFareZAR Float?
+  currency       String    @default("ZAR")
+  confidence     DataConfidence @default(LOW)
+  source         String?                      // "community", "admin", "estimate"
+  effectiveFrom  DateTime  @default(now())
+  effectiveTo    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  route          Route     @relation(fields: [routeId], references: [id])
+
+  @@index([routeId])
+  @@map("fare_ranges")
+}
+
+// ─────────────────────────────────────────────
+// ETA CONFIG
+// Per-route ETA parameters
+// ETAs are estimates, never guarantees
+// ─────────────────────────────────────────────
+model EtaConfig {
+  id                  String   @id @default(uuid())
+  routeId             String
+  baseMinutes         Int                        // baseline travel time
+  minMinutes          Int                        // optimistic
+  maxMinutes          Int                        // pessimistic
+  peakMultiplier      Float    @default(1.4)     // multiply for peak hours
+  offPeakMultiplier   Float    @default(1.0)
+  weekendMultiplier   Float    @default(1.1)
+  confidence          DataConfidence @default(LOW)
+  updatedAt           DateTime @updatedAt
+
+  route               Route    @relation(fields: [routeId], references: [id])
+
+  @@unique([routeId])
+  @@map("eta_configs")
+}
+
+// ─────────────────────────────────────────────
+// CROWD REPORT
+// User-submitted live update
+// Goes through moderation before display
+// ─────────────────────────────────────────────
+model CrowdReport {
+  id             String         @id @default(uuid())
+  deviceId       String                              // anonymous device identifier
+  userId         String?                             // if logged in
+  routeId        String?
+  stopId         String?
+  cityId         String
+  type           ReportType
+  severity       ReportSeverity @default(LOW)
+  description    String?        @db.VarChar(500)
+  latitude       Float?
+  longitude      Float?
+  isAnonymous    Boolean        @default(true)
+  status         ModerationStatus @default(PENDING)
+  trustScore     Float          @default(0.5)        // 0-1 confidence in report
+  upvotes        Int            @default(0)
+  downvotes      Int            @default(0)
+  duplicateOfId  String?
+  expiresAt      DateTime                            // auto-expire stale reports
+  resolvedAt     DateTime?
+  moderatedBy    String?
+  moderationNote String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  route          Route?         @relation(fields: [routeId], references: [id])
+  stop           Stop?          @relation(fields: [stopId], references: [id])
+  city           City           @relation(fields: [cityId], references: [id])
+  reactions      ReportReaction[]
+
+  @@index([cityId, status, expiresAt])
+  @@index([routeId, status])
+  @@index([stopId, status])
+  @@index([deviceId])
+  @@map("crowd_reports")
+}
+
+// ─────────────────────────────────────────────
+// REPORT REACTION
+// Upvotes/downvotes to surface trust signals
+// ─────────────────────────────────────────────
+model ReportReaction {
+  id        String   @id @default(uuid())
+  reportId  String
+  deviceId  String
+  reaction  ReactionType
+  createdAt DateTime @default(now())
+
+  report    CrowdReport @relation(fields: [reportId], references: [id])
+
+  @@unique([reportId, deviceId])
+  @@map("report_reactions")
+}
+
+// ─────────────────────────────────────────────
+// DEVICE
+// Anonymous device identity for MVP
+// No PII required — just a stable device token
+// ─────────────────────────────────────────────
+model Device {
+  id              String   @id @default(uuid())
+  deviceToken     String   @unique         // UUID generated on first launch
+  platform        String?                  // "android", "ios"
+  appVersion      String?
+  language        String   @default("en")
+  trustScore      Float    @default(0.5)   // rises with accurate reports, falls with flags
+  reportCount     Int      @default(0)
+  isBanned        Boolean  @default(false)
+  banReason       String?
+  lastSeenAt      DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  @@index([deviceToken])
+  @@map("devices")
+}
+
+// ─────────────────────────────────────────────
+// USER ACCOUNT (optional, phase 2)
+// Devices can optionally register for more features
+// ─────────────────────────────────────────────
+model User {
+  id          String   @id @default(uuid())
+  deviceId    String?  @unique
+  email       String?  @unique
+  displayName String?
+  role        UserRole @default(COMMUTER)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────
+// SYNC MANIFEST
+// Tracks what data version each city is on
+// Mobile app uses this to know what to download
+// ─────────────────────────────────────────────
+model SyncManifest {
+  id          String   @id @default(uuid())
+  cityId      String   @unique
+  routesHash  String                    // MD5 of routes payload
+  stopsHash   String                    // MD5 of stops payload
+  faresHash   String                    // MD5 of fares payload
+  version     Int      @default(1)
+  generatedAt DateTime @default(now())
+
+  @@map("sync_manifests")
+}
+
+// ─────────────────────────────────────────────
+// OFFLINE SYNC QUEUE
+// Reports submitted offline, pending upload
+// ─────────────────────────────────────────────
+model SyncQueue {
+  id          String      @id @default(uuid())
+  deviceId    String
+  payload     Json
+  type        SyncJobType
+  status      SyncStatus  @default(PENDING)
+  attempts    Int         @default(0)
+  lastError   String?
+  createdAt   DateTime    @default(now())
+  processedAt DateTime?
+
+  @@index([deviceId, status])
+  @@map("sync_queue")
+}
+
+// ─────────────────────────────────────────────
+// ADMIN AUDIT LOG
+// Immutable record of all admin actions
+// ─────────────────────────────────────────────
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String
+  action     String
+  entityType String
+  entityId   String
+  before     Json?
+  after      Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([actorId])
+  @@map("audit_logs")
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+enum StopType {
+  RANK         // formal taxi rank
+  STOP         // roadside stop
+  TERMINUS     // end-of-line terminal
+  INFORMAL     // flagged-down area, no fixed point
+}
+
+enum ReportType {
+  DELAY
+  TAXI_FULL
+  TAXI_NOT_AVAILABLE
+  DISRUPTION
+  SAFETY_INCIDENT
+  RANK_CONGESTION
+  ROUTE_CHANGE
+  FARE_CHANGE
+  OTHER
+}
+
+enum ReportSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ModerationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  FLAGGED
+  EXPIRED
+  DUPLICATE
+}
+
+enum DataConfidence {
+  LOW       // unverified, community-sourced
+  MEDIUM    // partially verified
+  HIGH      // verified by admin or multiple sources
+}
+
+enum UserRole {
+  COMMUTER
+  MODERATOR
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum ReactionType {
+  UPVOTE
+  DOWNVOTE
+}
+
+enum SyncJobType {
+  REPORT_SUBMIT
+  REACTION_SUBMIT
+}
+
+enum SyncStatus {
+  PENDING
+  PROCESSING
+  DONE
+  FAILED
+}

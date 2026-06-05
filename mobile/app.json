@@ -1,0 +1,55 @@
+{
+  "expo": {
+    "name": "Siyaphi",
+    "slug": "siyaphi-taxi-navigator",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icons/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#1a1a2e"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "za.siyaphi.taxinavigator",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Siyaphi uses your location to find nearby taxi ranks and stops.",
+        "NSLocationAlwaysUsageDescription": "Siyaphi uses your location to show nearby taxis."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icons/adaptive-icon.png",
+        "backgroundColor": "#1a1a2e"
+      },
+      "package": "za.siyaphi.taxinavigator",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ]
+    },
+    "extra": {
+      "apiBaseUrl": "http://localhost:3000/api/v1",
+      "wsBaseUrl": "ws://localhost:3000",
+      "defaultCity": "johannesburg"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-location",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icons/notification-icon.png",
+          "color": "#1a1a2e"
+        }
+      ]
+    ],
+    "scheme": "siyaphi"
+  }
+}

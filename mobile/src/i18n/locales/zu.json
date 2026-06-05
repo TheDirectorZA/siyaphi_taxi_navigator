@@ -1,0 +1,40 @@
+{
+  "app_name": "Siyaphi",
+  "tagline": "Uyaphi?",
+
+  "search": {
+    "title": "Thola iteksi yakho",
+    "origin_placeholder": "Uphi? (isb. Noord Rank)",
+    "destination_placeholder": "Uya kuphi? (isb. Soweto)",
+    "search_button": "Sesha izindlela",
+    "no_results": "Azitholakalanga izindlela. Zama amanye amagama.",
+    "no_results_hint": "Izindlela zamateksi azigcinwa ngokusemthethweni.",
+    "loading": "Isesha izindlela...",
+    "offline_notice": "Ibonisa imiphumela yokugcina. Ezinye izindlela zingaba nendala."
+  },
+
+  "fare": {
+    "title": "Inani elingagcinwa",
+    "range": "R{{min}} – R{{max}}",
+    "typical": "Ngokuvamile R{{amount}}",
+    "disclaimer": "Amanani ayashintsha. Hlola nomshayeli.",
+    "not_available": "Inani alijwayelekile"
+  },
+
+  "eta": {
+    "title": "Isikhathi sokuhambo esingagciniwe",
+    "range": "{{min}}–{{max}} min",
+    "disclaimer": "Iziqikelelo kuphela.",
+    "not_available": "Isikhathi sokuhambo asitholakali"
+  },
+
+  "offline": {
+    "banner": "Awunakuxhumeka — ibonisa idatha yagcinwa",
+    "sync_now": "Vumela manje"
+  },
+
+  "errors": {
+    "generic": "Kunokhuni. Zama futhi.",
+    "no_internet": "Akukho ukuxhumeka kwe-intanethi"
+  }
+}
